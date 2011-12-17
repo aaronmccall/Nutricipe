@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>{% block title %}Nutricipe::{% endblock %}</title>
+</head>
+<body{% if body_id %} id="{{ body_id }}"{% endif %}{% if body_class %}class="{{ body_class }}"{% endif %}>
+    <header>
+        <h1>Nutricipe: Your Recipe for Nutrition</h1>
+    </header>
+    <nav class="top_nav"></nav>
+    <section>
+        <div id="content">
+        {% block content %}
+        <h2>Test Content</h2>
+        <form>
+            <label for="ingred_search_query">Ingredient Lookup</label>
+            <input type="text" name="q" id="ingred_search_query">
+            <button type="submit">Search</button>
+        </form>
+        {% endblock %}
+        </div>
+    </section>
+    <footer>
+        <p>&copy; 2011 Aaron McCall and James Menera</p>
+    </footer>
+    {% block append_js %}
+
+    <script type="text/javascript" src="/js/library.js"></script>
+    {% endblock %}
+</body>
+</html>
