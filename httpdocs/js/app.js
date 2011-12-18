@@ -395,7 +395,7 @@ if (!window.App) var App = {
         });
     },
 
-    UI: {},
+    UI: { autocomplete: {} },
 
     utils: {
         hasLocalStorage: function() {
@@ -514,216 +514,19 @@ if (!window.App) var App = {
     }
 })($, App);
 
-//Company auto-completer
-App.UI.company =  {
-    include_contacts: false,
-    company_tpl: '<a>{{ name }}<br><span>{{ location }}</span></a>',
-    contact_tpl: '<a>&nbsp;&nbsp;{{ first_name }} {{ last_name }}<br><span>&nbsp;&nbsp;&nbsp;{{ phone }} | {{ email }}</span></a>',
-    autocomplete: function($form, include_contacts, include_addresses){
-        //Setup company autocompleting on input.company_ac, setting company.pk to hidden field designated by
-        //input.company_ac's data-target attribute
-        var $form = $form || $('form');
-        $form.delegate("input.company_ac", "focus", function(event){
-            var $this = $(this);
-            if (!$this.is(':data(autocomplete)')) {
-                $this.autocomplete({
-                    minLength: 2,
-                    source: function(req, resp) { $.getJSON("/companies/search/", {
-                        query: req.term,
-                        contacts: ((App.UI.company.include_contacts||include_contacts)?1:0),
-                        addresses: ((App.UI.company.include_addresses||include_addresses)?1:0)
-                    }, resp) },
-                    focus: function(event, ui) { event.target.value = (!ui.item.company) ? ui.item.name : ui.item.company.name; return false; },
-                    select: function(event, ui) {
-                            App.publish('select:company', [event, ui]);
-                        return false;
-                    }
-                }).data("autocomplete")._renderItem = function(ul, item) {
-                    $('<li/>').data("item.autocomplete", item)
-                         .append(App.render(App.UI.company.company_tpl, item))
-                         .appendTo(ul);
-                    if (item.contacts) {
-                        $.each(item.contacts, function(){
-                            $('<li/>').data("item.autocomplete", $.extend({}, this, {company: item}))
-                                .append(App.render(App.UI.company.contact_tpl, this))
-                                .appendTo(ul);
-                        });
-
-                    }
-                };
-            }
-        });
-    }
-};
-
-//SeedType auto-completer
-App.UI.seedtype = {
-    autocomplete: function(){
-        var $form = arguments[0] || $('form'),
-            seedtype_process = function (item) {
-                var _list = [], _output = item.common;
-                if (item.scientific) {
-                    _list = [];
-                    if (item.scientific.genus) _list.push(item.scientific.genus);
-                    if (item.scientific.species) _list.push(item.scientific.species);
-                    _output += '<br><span>' + _list.join(' ') + '</span>';
-                }
-                return _output;
-            };
-        //Setup seedtype autocompleting on order_description field
-        $form.delegate("input.seedtype_ac", "focus", function(event){
-            var $this = $(this);
-            if (!$this.is(':data(autocomplete)')) {
-                $this.autocomplete({
-                    minLength: 3,
-                    source: function(req, resp) {
-                        $.getJSON("/seed/search/", {query: req.term}, resp, 'json');
-                    },
-                    focus: function (event, ui) {
-                        if (event.target) event.target.value = ui.item.common;
-                        return false;
-                    },
-                    select: function (event, ui) {
-//                        var $this, $id_target;
-//                        if (event.target) {
-//                            $this = $(event.target);
-//                            $id_target = $($this.attr('data-target')) || $('#' + this.id.replace("_ac", ""));
-//                            $this.data("item.autocomplete", ui.item).val(ui.item.common);
-//                            $id_target.val(ui.item.id);
-//                        }
-                        if (App.publish) App.publish('select:seedtype', [event, ui.item]);
-                        return false;
-                    }
-                }).data("autocomplete")._renderItem = function(ul, item) {
-                    if (item.query) return;
-                    return $('<li/>').data("item.autocomplete", item)
-                                     .append('<a>' + seedtype_process(item) + '</a>')
-                                     .appendTo(ul)
-                };
-            }
-        });
-    }
-};
-
-//InventoryLot auto-completer
-App.UI.inventorylot = {
-    autocomplete: function(){
-        var $form = (arguments[0] && arguments[0].jquery) ? arguments[0] : $(arguments[0]||'form:first'),
-            type = arguments[1] || 'seed',
-            template = arguments[2] || '{{ number }} - {{ description }}',
-            minLength = arguments[3] || 2;
-
-        $form.delegate('.inventorylot_ac', 'focus', function(event){
-//            console.log('Browser has local storage? %s', App.utils.hasLocalStorage()?'Yes':'No');
-            if (!$(this).is(':data(autocomplete)')) {
-                $(this).autocomplete({
-                    minLength: minLength,
-
-                    source: function(req, resp){
-                        var payload = {query: req.term},
-                            cache_key = req.term.toLowerCase().substr(0, minLength);
-//                        console.log('Cache key is %s', cache_key);
-
-                        if (type = 'blend') payload.blend = 'only';
-                        $.get('/inventory/search/', payload, resp, 'json');
-                    },
-
-                    focus: function(event, ui) {
-                        if (event.target && ui.item) {
-                            event.target.value = App.render(template, ui.item);
-                            return false;
-                        }
-                    },
-
-                    select: function (event, ui) {
-                        App.publish('select:' + type + 'lot', [event, ui.item]);
-                        return false;
-                    }
-                }).data("autocomplete")._renderItem = function(ul, item){
-                    return $('<li/>').data('item.autocomplete', item)
-                                      .append('<a>' + App.render(template, item) + '</a>')
-                                      .appendTo(ul);
-                };
-            }
-        });
-    }
-};
-
-//InventoryLot auto-completer
-App.UI.misc_item = {
-    autocomplete: function(){
-        var $form = (arguments[0] && arguments[0].jquery) ? arguments[0] : $(arguments[0]||'form:first'),
-            list = arguments[1] || [
-                'Apron',
-                'Bagging',
-                'Bags',
-                'Bins',
-                'Box Large',
-                'Box Small',
-                'Certification Fee',
-                'Cleaning Fee',
-                'Contract Work',
-                'Corn Grit',
-                'Freight',
-                'Handling',
-                'Inoculant',
-                'Miscellaneous',
-                'Mixing',
-                'Pallet Shipping',
-                'Pallet Warehouse',
-                'Rice Hulls',
-                'Seed Application Fee',
-                'Seed Inspection Fee',
-                'Shrinkwrap',
-                'Storage',
-                'Strawbale',
-                'Tags',
-                'Testing Fee',
-                'Totes',
-                'Turf Supreme Fertilizer',
-                'UPS',
-                'Van Fee',
-                'Vermiculite'
-            ],
-            minLength = arguments[2] || 2;
-
-        $form.delegate('.misc_item_ac', 'focus', function(event){
-//            console.log('Browser has local storage? %s', App.utils.hasLocalStorage()?'Yes':'No');
-            if (!$(this).is(':data(autocomplete)')) {
-                $(this).autocomplete({
-                    minLength: minLength,
-
-                    source: list,
-
-                    select: function (event, ui) {
-                        App.publish('select:misc_item', [event, ui]);
-                        return false;
-                    }
-                })/*.data("autocomplete")._renderItem = function(ul, item){
-                    return $('<li/>').data('item.autocomplete', item)
-                                      .append('<a>' + App.render(template, item) + '</a>')
-                                      .appendTo(ul);
-                }*/;
-            }
-        });
-    }
-};
-
-
-
 //Taxonomy (Genus, Species, Variety) auto-completer
-App.taxonomy = (function($){
+App.UI.autocomplete.ingredient = (function($){
     var _renderItem = function(ul, item){
         if (item.query) return;
         return $('<li/>').data("item.autocomplete", item)
-                         .append('<a>' + _taxonomy_output(item))
+                         .append()
                          .appendTo(ul)
     };
     return {
         renderItem: _renderItem,
-        init_autocompleters: function(){
+        init: function(){
             var $form = arguments[0] || $('form'),
-                _class = arguments[1] || 'taxonomy_ac';
+                _class = arguments[1] || 'ingredient_ac';
 
             $form.delegate('input.'+_class, 'focus', function(event){
                 var $this = $(this),
@@ -738,39 +541,23 @@ App.taxonomy = (function($){
                 if (!$this.is(':data(autocomplete)')) {
                     $this.autocomplete({
                         minLength: 2,
-                        focus: function(event, ui) { event.target.value = _to_html(_common_tpl, ui.item).trim(); return false; },
+                        focus: function(event, ui) {
+                            console.log('args: %o', arguments);
+//                            event.target.value = ui.item.long_desc;
+                            return false;
+                        },
                         select: function(event, ui) {
-                            var $this, $id_target, item = ui.item, sci = item.scientific;
-                            if (event.target) {
-                                $this = $(event.target);
-                                $id_target = $('#' + this.id.replace("_ac", ""));
-                                $this.val(_to_html(_common_tpl, item));
-                                $id_target.val(item[_type + '_id']);
-                                if (_type == 'variety' || _type == 'species') {
-                                    $('#id_species').val(item.species_id);
-                                    $('#id_species_ac').val(_to_html(_species_tpl, {
-                                        common: item.species,
-                                        scientific: sci.species
-                                    }).trim());
-                                }
-                                $('#id_genus').val(item.genus_id);
-                                $('#id_genus_ac').val(_to_html(_genus_tpl, {
-                                    common: item.genus,
-                                    scientific: sci.genus
-                                }).trim());
-                            }
+                            var $this = $(event.target);
+                            $('#results').append('<li>' + ui.item.long_desc + '</li>');
                             return false;
                         },
                         source: function(req, resp) {
-                            $.getJSON("/seed/search/"+_type+"/", {query: req.term}, resp)
+                            $.getJSON("/ingredient/search/", {q: req.term}, resp)
                         }
                     }).data('autocomplete')._renderItem = function(ul, item){
                         if (item.query) return;
                         $('<li/>').data('item.autocomplete', item)
-                                  .append(_to_html(_item_tpl, {
-                                      common: _to_html(_common_tpl, item),
-                                      scientific: _to_html(_sci_tpl, item.scientific)
-                                  }).replace(/[ ]+/g, " ")).appendTo(ul);
+                                  .append('<a>' + item.long_desc + '</a>').appendTo(ul);
                     };
                 }
             });
@@ -1133,7 +920,7 @@ App.Backbone = {
             this.signal && this.signal.apply(this, args);
         },
         initialize: {
-            before: App.Backbone.decorateAll.init_signals,
+            before: this.init_signals,
             after: function(){
                 var args = _.toArray(arguments);
         //        console.log('Running initialize after function.');
