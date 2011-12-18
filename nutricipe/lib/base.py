@@ -93,7 +93,7 @@ def baseconvert(number,fromdigits,todigits):
     return res
 
 def jsonify(object):
-    from kernel.lib.models import convert_model_to_json, extract_fields_from_model
+    from lib.models import convert_model_to_json, extract_fields_from_model
     object = convert_model_to_json(object) if isinstance(object, models.Model) else object
     if isinstance(object, QuerySet):
         return serialize('json', object)
