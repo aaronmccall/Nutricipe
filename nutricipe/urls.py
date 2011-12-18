@@ -14,5 +14,6 @@ urlpatterns = patterns('nutricipe.views',
 
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
+    url(r'^ingredient/search/$', 'ingred_search', name='ingredient_search'),
     url(r'^$', 'home', name='home'),
 )
