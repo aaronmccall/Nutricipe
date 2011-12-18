@@ -1,4 +1,6 @@
+# metadata
 .idea/
+.DS_STORE
 
 env/
 
