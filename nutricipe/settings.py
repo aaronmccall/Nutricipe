@@ -106,6 +106,7 @@ TEMPLATE_DIRS = (
 
 INSTALLED_APPS = (
     'nutricipe.lib',
+    'nutricipe.main',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
