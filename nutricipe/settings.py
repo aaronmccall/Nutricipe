@@ -98,7 +98,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'nutricipe.urls'
 
 TEMPLATE_DIRS = (
-    "/Users/Aaron/Sites/Nutricipe/nutricipe/templates",
+    "/Users/james/Sites/Nutricipe/nutricipe/templates",
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
