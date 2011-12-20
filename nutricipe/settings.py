@@ -1,5 +1,13 @@
 # Import all of our local settings
 from localsettings import *
+import os
+
+SITE_ROOT = os.path.abspath(os.path.dirname(__file__))
+PROJECT_ROOT = os.sep.join(SITE_ROOT.split(os.sep)[:-1])
+
+def _rel_path(path, relative_to='site'):
+    top = SITE_ROOT if relative_to == 'site' else PROJECT_ROOT
+    return os.path.join(top, path)
 
 # Django settings for nutricipe project.
 _globals = globals()
@@ -98,7 +106,7 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'nutricipe.urls'
 
 TEMPLATE_DIRS = (
-    "/Users/james/Sites/Nutricipe/nutricipe/templates",
+    _rel_path("templates"),
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
